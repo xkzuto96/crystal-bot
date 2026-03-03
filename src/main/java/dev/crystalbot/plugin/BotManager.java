@@ -195,6 +195,9 @@ public final class BotManager implements Listener {
                 Bukkit.getScheduler().runTaskLater(plugin, () -> refreshShieldAfterSpawn(owner.getUniqueId()), 120L);
             }
         }
+        
+        // Schedule 10-second health check to verify bot has all settings correctly applied
+        Bukkit.getScheduler().runTaskLater(plugin, () -> performBotHealthCheck(owner.getUniqueId()), 200L);
 
         owner.sendMessage(Component.text("Bot settings updated instantly.", NamedTextColor.GREEN));
     }
@@ -854,7 +857,73 @@ public final class BotManager implements Listener {
 
         npc.destroy();
     }
+    private void performBotHealthCheck(UUID ownerId) {
+        NPC npc = botByOwner.get(ownerId);
+        if (npc == null || !npc.isSpawned() || !(npc.getEntity() instanceof LivingEntity bot)) {
+            return;
+        }
 
+        BotRuntime runtime = runtimeByEntity.get(bot.getUniqueId());
+        Player owner = Bukkit.getPlayer(ownerId);
+        if (runtime == null || owner == null) {
+            return;
+        }
+
+        // Check 1: Bot should not be dead
+        if (bot.isDead() || bot.getHealth() <= 0) {
+            // Bot is dead, respawn it
+            despawnForOwner(ownerId);
+            spawnOrReplaceBot(owner, runtime.settings);
+            return;
+        }
+
+        // Check 2: Verify armor is equipped
+        EntityEquipment equipment = bot.getEquipment();
+        if (equipment == null) {
+            reapplySpawnState(ownerId);
+            return;
+        }
+
+        // Check 3: Verify items in hand
+        ItemStack mainHand = equipment.getItemInMainHand();
+        ItemStack offHand = equipment.getItemInOffHand();
+        boolean hasMainHand = mainHand != null && mainHand.getType() != Material.AIR;
+        boolean hasOffHand = offHand != null && offHand.getType() != Material.AIR;
+
+        if (!hasMainHand || !hasOffHand) {
+            // Missing items in hand, reapply
+            reapplySpawnState(ownerId);
+            return;
+        }
+
+        // Check 4: If shield is enabled, verify shield visual is working
+        if (runtime.settings.isShieldEnabled()) {
+            if (mainHand.getType() != Material.TOTEM_OF_UNDYING) {
+                reapplySpawnState(ownerId);
+                return;
+            }
+        }
+
+        // Check 5: Verify slow falling if enabled
+        if (runtime.settings.isSlowFallingEnabled()) {
+            PotionEffect slowFalling = bot.getPotionEffect(PotionEffectType.SLOW_FALLING);
+            if (slowFalling == null || slowFalling.getDuration() == 0) {
+                maintainMovementEffects(bot, runtime);
+            }
+        }
+
+        // Check 6: Verify helmet is equipped correctly (check armor type)
+        ItemStack helmet = equipment.getHelmet();
+        if (helmet == null || helmet.getType() == Material.AIR) {
+            if (runtime.settings.getArmorType() != ArmorType.NONE && !runtime.settings.isCustomModeEnabled()) {
+                // Should have armor but doesn't, reapply
+                reapplySpawnState(ownerId);
+                return;
+            }
+        }
+
+        // All checks passed, bot is healthy
+    }
     private static final class BotRuntime {
         private final UUID ownerId;
         private final BotSettings settings;
