@@ -3,7 +3,7 @@ plugins {
 }
 
 group = "dev.crystalbot"
-version = "1.0.1"
+version = "1.0.2"
 
 base {
     archivesName.set("crystal-bot")
