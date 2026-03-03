@@ -1,0 +1,14 @@
+name: CrystalBot
+version: ${version}
+main: dev.crystalbot.plugin.CrystalBotPlugin
+api-version: '1.21'
+authors: [ xkzuto ]
+depend: [ Citizens ]
+commands:
+  bot:
+    description: Open Crystal Bot GUI
+    usage: /bot
+    permission: crystalbot.use
+permissions:
+  crystalbot.use:
+    default: true

@@ -1,0 +1,18 @@
+.gradle/
+build/
+bin/
+out/
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+*.zip
+
+# Runtime files
+logs/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
