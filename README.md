@@ -13,13 +13,14 @@ This plugin requires Citizens for real player-model NPC entities.
 
 ## Features
 
-- Spawns a stationary player-model bot that looks at the closest player
-- Bot can be hit and damaged (real hitbox)
-- Infinite totems when shield is disabled
-- Shield use visuals when enabled
-- Toggle armor type (Diamond/Netherite)
-- Toggle blast protection leggings (Protection IV / Blast Protection IV)
-- Toggle permanent slow falling
-- Toggle pre-1.19.4 blast protection knockback behavior
-- Turn speed presets (Aggressive/Balanced/Slow)
-- Clean 5x9 GUI with status dyes and credit fillers
+- Spawns/replaces a Citizens player-model practice bot with a real hitbox
+- Shield mode with visual blocking state, axe-disable behavior, and auto refresh after appearance updates
+- Totem system with infinite mode or configurable totem limit
+- Armor presets with Diamond/Netherite/No Armor options
+- Advanced custom armor mode (piece-by-piece armor, per-piece protection type, set protection sync, optional Thorns III)
+- Permanent slow falling toggle
+- Aim mode presets (Cheat/Aggressive/Balanced/Slow)
+- Follow-player toggle so the bot can move toward the owner
+- Appearance editor: custom bot name, custom skin, and name/skin link toggle
+- Instant settings application with delayed reapply safety to prevent missing gear after name/skin changes
+- `/bot` GUI with status indicators and quick toggles
