@@ -74,11 +74,11 @@ public final class BotMenu {
         )));
 
         inventory.setItem(SLOT_ARMOR, item(
-            settings.getArmorType().getChest(),
+            settings.getArmorType() == ArmorType.NONE ? Material.WHITE_STAINED_GLASS_PANE : settings.getArmorType().getChest(),
             ChatColor.YELLOW + "Armor Type",
             List.of(
                 ChatColor.GRAY + "Current: " + ChatColor.WHITE + settings.getArmorType().getDisplay(),
-                ChatColor.AQUA + "Click to change"
+                ChatColor.AQUA + "Click to cycle"
             )
         ));
 

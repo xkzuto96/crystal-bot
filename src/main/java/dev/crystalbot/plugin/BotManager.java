@@ -184,6 +184,14 @@ public final class BotManager implements Listener {
 
         // If appearance changed, schedule delayed reapply to prevent naked bot after skin/name load
         if (nameChanged || skinChanged) {
+            // Immediate 1-tick armor reapply to catch Citizens name/skin sync stripping
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                if (npc.isSpawned() && npc.getEntity() instanceof LivingEntity botEntity && botEntity.isValid()) {
+                    equipBot(botEntity, runtime.settings);
+                    syncHands(botEntity, runtime);
+                }
+            });
+            
             // Early 3-second refresh to catch equipment loss from name/skin changes
             Bukkit.getScheduler().runTaskLater(plugin, () -> reapplySpawnState(owner.getUniqueId()), 60L);
             
@@ -912,14 +920,45 @@ public final class BotManager implements Listener {
             }
         }
 
-        // Check 6: Verify helmet is equipped correctly (check armor type)
+        // Check 6: Verify all armor pieces are equipped correctly
         ItemStack helmet = equipment.getHelmet();
-        if (helmet == null || helmet.getType() == Material.AIR) {
-            if (runtime.settings.getArmorType() != ArmorType.NONE && !runtime.settings.isCustomModeEnabled()) {
-                // Should have armor but doesn't, reapply
-                reapplySpawnState(ownerId);
-                return;
+        ItemStack chestplate = equipment.getChestplate();
+        ItemStack leggings = equipment.getLeggings();
+        ItemStack boots = equipment.getBoots();
+        
+        boolean needsArmorReapply = false;
+        
+        if (!runtime.settings.isCustomModeEnabled()) {
+            // Normal mode: all armor should match the selected type
+            ArmorType expectedArmor = runtime.settings.getArmorType();
+            if (expectedArmor != ArmorType.NONE) {
+                // Should have armor
+                if (helmet == null || helmet.getType() != expectedArmor.getHelmet() ||
+                    chestplate == null || chestplate.getType() != expectedArmor.getChest() ||
+                    leggings == null || leggings.getType() != expectedArmor.getLegs() ||
+                    boots == null || boots.getType() != expectedArmor.getBoots()) {
+                    needsArmorReapply = true;
+                }
             }
+        } else {
+            // Custom mode: verify custom armor pieces
+            if ((helmet == null || helmet.getType() == Material.AIR) && runtime.settings.getCustomHelmetType() != ArmorType.NONE) {
+                needsArmorReapply = true;
+            }
+            if ((chestplate == null || chestplate.getType() == Material.AIR) && runtime.settings.getCustomChestType() != ArmorType.NONE) {
+                needsArmorReapply = true;
+            }
+            if ((leggings == null || leggings.getType() == Material.AIR) && runtime.settings.getCustomLegsType() != ArmorType.NONE) {
+                needsArmorReapply = true;
+            }
+            if ((boots == null || boots.getType() == Material.AIR) && runtime.settings.getCustomBootsType() != ArmorType.NONE) {
+                needsArmorReapply = true;
+            }
+        }
+        
+        if (needsArmorReapply) {
+            reapplySpawnState(ownerId);
+            return;
         }
 
         // All checks passed, bot is healthy
